@@ -55,7 +55,7 @@ const registerfun = async (req, res) => {
     });
 
     //send verification email
-    sendVerificationEmail(email, name, otp);
+   await sendVerificationEmail(email, name, otp);
 
     //create token
     const token = await create_token(newUser.id, email);
