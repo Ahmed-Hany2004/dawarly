@@ -1,8 +1,8 @@
 const { prisma } = require("../prismastep"); //get prisma client
 const { create_token } = require("../fun/createToken");
 const bcrypt = require("bcryptjs");
-const { sendVerificationEmail } = require("../fun/sendEmail");
 const { generateRandomKey } = require("../fun/createotp");
+const {sendOTP} = require("../fun/resend")
 
 
 // const { PrismaClient } = require("@prisma/client");
@@ -54,8 +54,8 @@ const registerfun = async (req, res) => {
       },
     });
 
-    //send verification email
-   await sendVerificationEmail(email, name, otp);
+  
+   sendOTP(email,otp)
 
     //create token
     const token = await create_token(newUser.id, email);
@@ -332,7 +332,7 @@ const resendEmailfun = async (req, res) => {
   })
 
   //send verification email
-  sendVerificationEmail(user.email, user.name, newOtp);
+   sendOTP(user.email,newOtp)
 
   //safe user object
   const { password, ...safeUser } = updatedUser;
