@@ -15,9 +15,9 @@ router.put("/:id",veriy_Token, updateUerfun )
 
 router.delete("/:id",veriy_Token, deleteUserfun)
 
-router.post("/verify/:id",veriy_Token, verufyuserfun)
+router.post("/verify", verufyuserfun)
 
-router.post("/resend-email/:id", veriy_Token , resendEmailfun)
+router.post("/resend-email", resendEmailfun)
 
 router.post("/re-pass/:id",veriy_Token,repassFun)
 

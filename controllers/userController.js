@@ -59,7 +59,7 @@ const registerfun = async (req, res) => {
    sendOTP(email,otp,isAdmin)
 
     //create token
-    const token = await create_token(newUser.id, email);
+    const token = await create_token(newUser.id, email,isAdmin);
 
     const { password, ...safeUser } = newUser;
 
@@ -235,19 +235,13 @@ const verufyuserfun = async (req, res) => {
   
   try{
 
-    const userId = req.params.id;
-    const { otp } = req.body;
-
-
-    //check if  he  owns the account
-    if (req.user.id !== userId) {
-      return res.status(403).json("you are not allowed to delete this account");
-    }
+    
+    const { otp,email } = req.body;
 
     //find user in db
     const user = await prisma.user.findUnique({
       where: {
-        id: userId,
+       email:email
       },
     });
 
@@ -268,7 +262,7 @@ const verufyuserfun = async (req, res) => {
     //update user to verified
     const updatedUser = await prisma.user.update({
       where: {
-        id: userId,
+        email:email,
       },
       data: {
         isVerified: true,
@@ -295,19 +289,17 @@ const verufyuserfun = async (req, res) => {
 
 const resendEmailfun = async (req, res) => {
  
- const userId = req.params.id;
+ const {email} = req.body
 
  try{
 
   //check if  he  owns the account
-    if (req.user.id !== userId) {
-      return res.status(403).json("you are not allowed to delete this account");
-    }
+   
 
   // find user in db 
   const user = await prisma.user.findUnique({
     where:{
-      id: userId
+      email:email
     }
   })
 
@@ -326,12 +318,13 @@ const resendEmailfun = async (req, res) => {
   //update user otp in db
   const updatedUser = await prisma.user.update({
     where:{
-      id: userId
+      email:email
     },
     data:{
       otp: newOtp
     }
   })
+
 
   //send verification email
    sendOTP(user.email,newOtp)
