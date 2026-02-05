@@ -19,7 +19,8 @@ const registerfun = async (req, res) => {
     if (!name || !email || !pass || !confirmpassword || !phone) {
       return res.status(400).json("err in input"); //check for input
     }
-
+  
+     isAdmin  = false
     //check if email and phone already exists
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -55,7 +56,7 @@ const registerfun = async (req, res) => {
     });
 
   
-   sendOTP(email,otp)
+   sendOTP(email,otp,isAdmin)
 
     //create token
     const token = await create_token(newUser.id, email);
@@ -82,7 +83,7 @@ const loginfun = async (req, res) => {
       return res.status(400).send("err in input"); //check for input
     }
 
-    //find email in db
+       //find email in db
     const user = await prisma.user.findUnique({
       where: {
         email: email,
@@ -94,6 +95,7 @@ const loginfun = async (req, res) => {
         password: true,
         phone: true,
         isVerified: true,
+        isAdmin:true
       },
     });
 
@@ -114,7 +116,7 @@ const loginfun = async (req, res) => {
     }
 
     //create token
-    const token = await create_token(user.id, email);
+    const token = await create_token(user.id, email, user.isAdmin);
 
     const { password, ...safeUser } = user;
 
@@ -349,8 +351,67 @@ const resendEmailfun = async (req, res) => {
 }
 
 
+//rep password function
+//post 
+// /re-pass
+
+const repassFun = async(req,res)=>{
+
+  try{
+
+    const userId = req.params.id;
+    const { pass } = req.body;
+
+    //check if  he  owns the account
+    if (req.user.id !== userId) {
+      return res.status(403).json("you are not allowed to delete this account");
+    }
+
+    //find user in db
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json("User not found");
+    }
+
+    if(!user.isVerified){
+      return res.status(403).json("Please verify your email to reset password");
+    }
+
+      //hash password
+
+    const saltRounds = 10;
+    const hashedPassword = bcrypt.hashSync(pass, saltRounds);
+
+    //update user password in db
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: hashedPassword,
+        isVerified: true,
+        otp: null, //clear otp after verification
+      },
+    });
+
+    const { password, ...safeUser } = updatedUser;
+
+    //send response
+    res.status(200).json({ mes: "password updated", data: safeUser });
+  }
+  catch (err) {
+    console.log("=========>" + err);
+    res.status(500).send("err");
+  }
+}
 
 
 
 
-module.exports = { registerfun, loginfun, updateUerfun, deleteUserfun, verufyuserfun,resendEmailfun };
+
+module.exports = { registerfun, loginfun, updateUerfun, deleteUserfun, verufyuserfun,resendEmailfun ,repassFun };

@@ -7,23 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-
-  id    String  @id @default(uuid())
-  email String  @unique
-  name  String 
-  password String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profile UserProfile?
-  phone  String @unique
-  isVerified Boolean @default(false)
-  otp      String?
+  id         String       @id @default(uuid())
+  email      String       @unique
+  name       String
+  password   String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  profile    UserProfile?
+  phone      String       @unique
+  isAdmin    Boolean      @default(false)
+  isVerified Boolean      @default(false)
+  otp        String?
 
   @@index([email])
 }
-
 
 model UserProfile {
   id        String   @id @default(uuid())
@@ -31,10 +29,132 @@ model UserProfile {
   img       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @unique
 
   @@index([userId])
 }
 
+model House {
+  id            String  @id @default(uuid())
+  title         String
+  subCategoryId String
+  display       Boolean @default(false)
+  userId        String
+  dawarlyphone  String?
+  price         Int
+  location      String
+  tags          Json
+  pinding       Boolean @default(false)
+  attributes    Json
+  description   String?
+}
+
+model Properties_for_rent {
+  id            String  @id @default(uuid())
+  title         String
+  subCategoryId String
+  display       Boolean @default(false)
+  userId        String
+  dawarlyphone  String?
+  price         Int
+  location      String
+  tags          Json
+  pinding       Boolean @default(false)
+  attributes    Json
+  description   String?
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  propertyId String
+  userId     String
+  startDate  DateTime
+  endDate    DateTime
+  status     String   @default("pending") // pending, confirmed, canceled
+  createdAt  DateTime @default(now())
+}
+
+// model SubCategory {
+//   id           String                @id @default(uuid())
+//   name         String
+//   categoryName String
+//   attributes   AttributeDefinition[]
+
+//   @@index([categoryName])
+// }
+
+model SubCategory {
+  id           String                   @id @default(uuid())
+  key          String // sell, rent
+  categoryName String
+  translations SubCategoryTranslation[]
+  attributes   AttributeDefinition[]
+
+  @@index([categoryName])
+}
+
+model SubCategoryTranslation {
+  id            String @id @default(uuid())
+  lang          String
+  name          String
+  subCategoryId String
+
+  subCategory SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([subCategoryId, lang])
+  @@index([subCategoryId])
+}
+
+model AttributeDefinition {
+  id            String   @id @default(uuid())
+  key           String   // furnishing, rooms
+  type          String   // number, select, date
+  required      Boolean  @default(false)
+  filterable    Boolean  @default(true)
+
+  subCategoryId String
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id], onDelete: Cascade)
+
+  translations  AttributeTranslation[]
+  options       AttributeOption[]
+}
+
+
+model AttributeTranslation {
+  id          String @id @default(uuid())
+  lang        String
+  label       String
+  attributeId String
+
+  attribute   AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([attributeId, lang])
+}
+
+
+model AttributeOption {
+  id           String @id @default(uuid())
+  value        String
+
+  attributeId  String
+  attribute    AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  translations AttributeOptionTranslation[]
+
+  @@index([attributeId])
+  @@unique([attributeId, value])
+}
+
+
+
+model AttributeOptionTranslation {
+  id        String @id @default(uuid())
+  lang      String
+  label     String
+  optionId String
+
+  option    AttributeOption @relation(fields: [optionId], references: [id] ,onDelete: Cascade)
+
+  @@unique([optionId, lang])
+}

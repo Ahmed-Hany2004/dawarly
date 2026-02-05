@@ -15,7 +15,13 @@ app.use(cors())
 
 
 userpath = require("./routes/userRoute")
+subCategorypath = require("./routes/subCategory")
+productpath = require("./routes/Product") 
+Bookingpath = require("./routes/Booking")
 
 app.use("/api/users", userpath )
+app.use("/api/subCategory", subCategorypath)
+app.use("/api/product", productpath)
+app.use("/api/Booking",Bookingpath)
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
