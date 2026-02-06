@@ -936,9 +936,51 @@ const getAttributesGroupedBySubCategory = async (req, res) => {
   }
 };
 
+const getAttributeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // جلب AttributeDefinition مع الترجمات
+    const attribute = await prisma.attributeDefinition.findUnique({
+      where: { id },
+      include: {
+        translations: true, // هيرجع كل الترجمات
+      }
+    });
+
+    if (!attribute) {
+      return res.status(404).json({ mes: "Attribute not found" });
+    }
+
+    // فلترة الترجمات للغتين فقط
+    const filteredTranslations = attribute.translations.filter(t =>
+      t.lang === "ar" || t.lang === "en"
+    );
+
+    const result = {
+      id: attribute.id,
+      key: attribute.key,
+      type: attribute.type,
+      required: attribute.required,
+      filterable: attribute.filterable,
+      subCategoryId: attribute.subCategoryId,
+      translations: filteredTranslations
+    };
+
+    res.status(200).json({
+      mes: "Attribute fetched successfully",
+      data: result
+    });
+
+  } catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+};
+
 
 module.exports={ createSubCategory ,updateSubCategoryKey, upsertSubCategoryTranslation, deleteSubCategory,getSubCategoriesByCategoryOnly , createAttribute   ,updateAttribute, deleteAttribute,getAttributesBySubCategory,
     addAttributeTranslation,updateAttributeTranslation, deleteAttributeTranslation , addAttributeOption , updateAttributeOption,
 deleteAttributeOption, getAttributeOptions , addOptionTranslation ,updateOptionTranslation ,deleteOptionTranslation,getallSubCategory ,getOneSubCategory,
-getAttributesGroupedBySubCategory
+getAttributesGroupedBySubCategory,getAttributeById
 }

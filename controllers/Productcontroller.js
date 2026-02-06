@@ -113,6 +113,161 @@ const getHouseById = async (req, res) => {
 // /get
 // product/pinding
 
+
+const updateHouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // جاي من auth middleware
+
+    const {
+      title,
+      display,
+      dawarlyphone,
+      price,
+      location,
+      tags,
+      attributes,
+      description
+    } = req.body;
+
+    // 1️⃣ تأكد إن المنتج موجود وصاحبه نفس اليوزر
+    const house = await prisma.house.findUnique({
+      where: { id }
+    });
+
+    if (!house) {
+      return res.status(404).json({ mes: "House not found" });
+    }
+
+    if (house.userId !== userId) {
+      return res.status(403).json({ mes: "Not allowed to update this house" });
+    }
+
+    // 2️⃣ فالديشن display + phone
+    if (display === true && !dawarlyphone) {
+      return res.status(400).json({
+        mes: "dawarlyphone is required when display is true"
+      });
+    }
+
+    // 3️⃣ جهّز الداتا للتحديث (partial update)
+    const updateData = {};
+
+    if (title !== undefined) updateData.title = title;
+    if (display !== undefined) updateData.display = display;
+    if (price !== undefined) updateData.price = price;
+    if (location !== undefined) updateData.location = location;
+    if (tags !== undefined) updateData.tags = tags;
+    if (attributes !== undefined) updateData.attributes = attributes;
+    if (description !== undefined) updateData.description = description;
+
+    if (display === true) {
+      updateData.dawarlyphone = dawarlyphone;
+    }
+
+    if (display === false) {
+      updateData.dawarlyphone = null;
+    }
+
+    // 4️⃣ Update
+    const updatedHouse = await prisma.house.update({
+      where: { id },
+      data: updateData
+    });
+
+    res.status(200).json({
+      mes: "House updated successfully",
+      data: updatedHouse
+    });
+
+  } catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+};
+
+
+const deleteHouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; // من auth middleware
+
+    // 1️⃣ تأكد إن البيت موجود
+    const house = await prisma.house.findUnique({
+      where: { id }
+    });
+
+    if (!house) {
+      return res.status(404).json({ mes: "House not found" });
+    }
+
+    // 2️⃣ تأكد إن اليوزر هو صاحب الإعلان
+    if (house.userId !== userId) {
+      return res.status(403).json({ mes: "Not allowed to delete this house" });
+    }
+
+    // 3️⃣ حذف البيت
+    await prisma.house.delete({
+      where: { id }
+    });
+
+    res.status(200).json({
+      mes: "House deleted successfully"
+    });
+
+  } catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+};
+
+const listHousesBySubCategory = async (req, res) => {
+  try {
+    const  subCategoryId  = req.params.id;
+
+    if (!subCategoryId) {
+      return res.status(400).json({
+        mes: "subCategoryId is required"
+      });
+    }
+
+    const houses = await prisma.house.findMany({
+      where: {
+        subCategoryId: subCategoryId
+      },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true,
+        display: true,
+        tags: true,
+        attributes: true,
+        description: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        id: "desc" // مؤقتًا، بعدين نخليها createdAt
+      }
+    });
+
+    res.status(200).json({
+      mes: "houses list",
+      data: houses
+    });
+
+  } catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+};
+
+
 const getpinding = async(req,res)=>{
   try{
  
@@ -227,6 +382,9 @@ const createProperties_for_rent = async (req, res) => {
 module.exports = {
   createHouse,
   getHouseById,
+  updateHouse,
+  deleteHouse,
+  listHousesBySubCategory,
   getpinding,
   updatepinding,
   createProperties_for_rent
