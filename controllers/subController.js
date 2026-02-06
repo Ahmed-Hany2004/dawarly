@@ -798,19 +798,43 @@ const deleteOptionTranslation = async (req, res) => {
   }
 };
 
-const getallSubCategory = async(req,res)=>{
+const getallSubCategory = async (req, res) => {
+  try {
+    const lang = req.query.lang || "en";
 
-    try{
+    const allData = await prisma.subCategory.findMany({
+      include: {
+        translations: true
+      }
+    });
 
-      alldata = await prisma.subCategory.findMany({})
+    // helper لاختيار الترجمة مع fallback
+    const getTranslation = (translations, lang) =>
+      translations.find(t => t.lang === lang) ||
+      translations.find(t => t.lang === "en") ||
+      null;
 
-      res.status(200).json({mes:"all data", data:alldata})
-    }
-     catch (err) {
+    const response = allData.map(sub => {
+      const tr = getTranslation(sub.translations, lang);
+
+      return {
+        id: sub.id,
+        key: sub.key,
+        categoryName: sub.categoryName,
+        name: tr ? tr.name : sub.key
+      };
+    });
+
+    res.status(200).json({
+      mes: "all subcategories",
+      data: response
+    });
+
+  } catch (err) {
     console.log("=========>", err);
     res.status(500).send("err");
   }
-}
+};
 
 module.exports={ createSubCategory ,updateSubCategoryKey, upsertSubCategoryTranslation, deleteSubCategory,getSubCategoriesByCategoryOnly , createAttribute   ,updateAttribute, deleteAttribute,getAttributesBySubCategory,
     addAttributeTranslation,updateAttributeTranslation, deleteAttributeTranslation , addAttributeOption , updateAttributeOption,
