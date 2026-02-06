@@ -836,7 +836,55 @@ const getallSubCategory = async (req, res) => {
   }
 };
 
+const getOneSubCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const subCategory = await prisma.subCategory.findUnique({
+      where: { id },
+      include: {
+        translations: {
+          where: {
+            lang: { in: ["ar", "en"] }
+          }
+        }
+      }
+    });
+
+    if (!subCategory) {
+      return res.status(404).json({ mes: "SubCategory not found" });
+    }
+
+    // نحول الترجمات لشكل أوضح
+    const translationsMap = {
+      ar: null,
+      en: null
+    };
+
+    subCategory.translations.forEach(t => {
+      translationsMap[t.lang] = t.name;
+    });
+
+    const response = {
+      id: subCategory.id,
+      key: subCategory.key,
+      categoryName: subCategory.categoryName,
+      translations: translationsMap
+    };
+
+    res.status(200).json({
+      mes: "subCategory",
+      data: response
+    });
+
+  } catch (err) {
+    console.log("=========>", err);
+    res.status(500).send("err");
+  }
+};
+
+
 module.exports={ createSubCategory ,updateSubCategoryKey, upsertSubCategoryTranslation, deleteSubCategory,getSubCategoriesByCategoryOnly , createAttribute   ,updateAttribute, deleteAttribute,getAttributesBySubCategory,
     addAttributeTranslation,updateAttributeTranslation, deleteAttributeTranslation , addAttributeOption , updateAttributeOption,
-deleteAttributeOption, getAttributeOptions , addOptionTranslation ,updateOptionTranslation ,deleteOptionTranslation,getallSubCategory
+deleteAttributeOption, getAttributeOptions , addOptionTranslation ,updateOptionTranslation ,deleteOptionTranslation,getallSubCategory ,getOneSubCategory
 }

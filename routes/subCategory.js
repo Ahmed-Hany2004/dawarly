@@ -5,7 +5,7 @@ const router = express.Router()
 
 const {createSubCategory ,updateSubCategoryKey,  upsertSubCategoryTranslation, deleteSubCategory, getSubCategoriesByCategoryOnly ,createAttribute , updateAttribute,deleteAttribute, getAttributesBySubCategory,
     addAttributeTranslation,updateAttributeTranslation, deleteAttributeTranslation ,addAttributeOption , updateAttributeOption,
-    deleteAttributeOption, getAttributeOptions, addOptionTranslation , updateOptionTranslation ,deleteOptionTranslation,getallSubCategory
+    deleteAttributeOption, getAttributeOptions, addOptionTranslation , updateOptionTranslation ,deleteOptionTranslation,getallSubCategory,getOneSubCategory
 } = require("../controllers/subController")
 
 
@@ -48,5 +48,9 @@ router.put("/filter/options/translations/:id",updateOptionTranslation)
 router.delete("/filter/options/translations/:id",deleteOptionTranslation)
 
 router.get("/all",getallSubCategory)
+
+router.get("/:id",getOneSubCategory)
+
+
 
 module.exports = router
