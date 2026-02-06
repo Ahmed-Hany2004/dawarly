@@ -1,88 +1,113 @@
 const { prisma } = require("../prismastep");
 
-const createproduct = async (req, res) => {
+const {validateAttributes} = require("../validate/validateatter")
+
+const createHouse = async (req, res) => {
   try {
-    const { title, display, dawarlyphone, attributes, price , tags ,location } = req.body;
-    const id = req.params.id;
 
-   
-    
-    if (!title || display == null || !attributes || !price || !tags || !location) {
-      return res
-        .status(400)
-        .json({ mes: "title , display and attribtes is require " });
+
+    const subCategoryId = req.params.id
+
+    const {
+      title,
+      price,
+      location,
+      display,
+      dawarlyphone,
+      tags,
+      attributes,
+      description
+    } = req.body;
+
+    const userId = req.user.id; // من auth middleware
+
+    // 1️⃣ basic validation
+    if (!title || !subCategoryId || typeof price !== "number" || !attributes) {
+      return res.status(400).json({ mes: "invalid input data" });
     }
 
-    const Pdata = {
-      title:title,
-      display:display,
-      attributes:attributes,
-      userId:req.user.id,
-      subCategoryId:id,
-      price:price,
-      tags:tags,
-      location:location,
+    // 2️⃣ check subcategory
+    const subCategory = await prisma.subCategory.findUnique({
+      where: { id: subCategoryId }
+    });
+
+    if (!subCategory) {
+      return res.status(404).json({ mes: "SubCategory not found" });
     }
 
-    if (display == true) {
-      if (dawarlyphone == null) {
-     return   res
-          .status(400)
-          .json({ mes: "if  display = true  dawarlyphone is require " });
-      }
-      Pdata["dawarlyphone"] =dawarlyphone
-    }
+    // 3️⃣ get attribute definitions
+    const attributeDefs = await prisma.attributeDefinition.findMany({
+      where: { subCategoryId },
+      include: { options: true }
+    });
 
-    // get filters
+    // 4️⃣ validate attributes
+    validateAttributes(attributes, attributeDefs);
 
-    const filters = await prisma.attributeDefinition.findMany({
-      where: {
-        subCategoryId: id,
-      },
-      select:{
-        key:true,
-        required:true
+    // 5️⃣ create product
+    const newHouse = await prisma.house.create({
+      data: {
+        title,
+        subCategoryId,
+        price,
+        location,
+        display: display ?? false,
+        dawarlyphone,
+        tags,
+        attributes,
+        description,
+        userId
       }
     });
 
-      for (const def of filters) {
-        if (def.required && attributes[def.key] === undefined) {
-          return res.status(400).json({mes:`${def.key} is required`})
-        }
-      }
+    res.status(201).json({
+      mes: "House created successfully",
+      data: newHouse
+    });
 
-
-  
-
-    //insert product in db 
-    const newproduct = await prisma.house.create({
-
-     data:Pdata  
-    })
-
-    res.status(200).json({mes:"newproduct created",data:newproduct})
   } catch (err) {
-    console.log("=========>" + err);
-    res.status(500).send("err");
+    console.log("=========>", err.message);
+    res.status(400).json({ mes: err.message });
   }
 };
 
 
-const getproduct = async(req,res)=>{
+const getHouseById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  try{
+    // جلب المنتج مع حقول محددة من اليوزر
+    const house = await prisma.house.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        subCategoryId: true,
+        display: true,
+        price: true,
+        location: true,
+        tags: true,
+        attributes: true,
+        description: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
 
-   
-   const data = await prisma.house.findMany({where:{pinding:true}}) 
+    if (!house) {
+      return res.status(404).json({ mes: "House not found" });
+    }
 
-   res.status(200).json({mes:"house data",data:data})
+    return res.status(200).json({ mes: "House found", data: house });
+  } catch (err) {
+    console.log("=========>", err.message);
+    return res.status(500).json({ mes: "Server error" });
   }
-  catch (err) {
-    console.log("=========>" + err);
-    res.status(500).send("err");
-  }
-} 
-
+};
 
 //get pinding data
 // /get
@@ -200,8 +225,8 @@ const createProperties_for_rent = async (req, res) => {
 };
 
 module.exports = {
-  createproduct,
-  getproduct,
+  createHouse,
+  getHouseById,
   getpinding,
   updatepinding,
   createProperties_for_rent

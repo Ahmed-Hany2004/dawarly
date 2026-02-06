@@ -3,13 +3,13 @@ const express = require("express")
 const router = express.Router()
 
 
-const {createproduct,getproduct,updatepinding,getpinding,createProperties_for_rent} = require("../controllers/Productcontroller")
+const {createHouse,getHouseById,updatepinding,getpinding,createProperties_for_rent} = require("../controllers/Productcontroller")
 
 const {veriy_Token} =require("../fun/verifyToken")
 
-router.post("/subCategory/:id",veriy_Token,createproduct)
+router.post("/subCategory/:id",veriy_Token,createHouse)
 
-router.get("/house",getproduct)
+router.get("/house/:id",getHouseById)
 
 router.get("/pinding",veriy_Token,getpinding)
 

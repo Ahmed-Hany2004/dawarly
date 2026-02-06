@@ -884,7 +884,61 @@ const getOneSubCategory = async (req, res) => {
 };
 
 
+const getAttributesGroupedBySubCategory = async (req, res) => {
+  try {
+    const lang = req.query.lang || "en"; // اللغة المطلوبة
+
+    // جلب كل الـ AttributeDefinitions مع SubCategory + الترجمات
+    const attributes = await prisma.attributeDefinition.findMany({
+      include: {
+        translations: true,
+        subCategory: {
+          include: { translations: true }
+        }
+      },
+      orderBy: { subCategoryId: "asc" }
+    });
+
+    const formatted = attributes.map(attr => {
+      // label الفلتر
+      const labelObj = attr.translations.find(t => t.lang === lang) ||
+                       attr.translations.find(t => t.lang === "en") || 
+                       { label: attr.key };
+
+      // name للسب كاتجورى
+      const subNameObj = attr.subCategory.translations.find(t => t.lang === lang) ||
+                         attr.subCategory.translations.find(t => t.lang === "en") ||
+                         { name: attr.subCategory.key };
+
+      return {
+        id: attr.id,
+        key: attr.key,
+        type: attr.type,
+        required: attr.required,
+        filterable: attr.filterable,
+        subCategory: subNameObj.name,
+        label: labelObj.label
+      };
+    });
+
+    // تجميع حسب اسم SubCategory
+    const grouped = formatted.reduce((acc, attr) => {
+      const subName = attr.subCategory;
+      if (!acc[subName]) acc[subName] = [];
+      acc[subName].push(attr);
+      return acc;
+    }, {});
+
+    res.status(200).json({ mes: "Attributes grouped by subCategory", data: grouped });
+  } catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+};
+
+
 module.exports={ createSubCategory ,updateSubCategoryKey, upsertSubCategoryTranslation, deleteSubCategory,getSubCategoriesByCategoryOnly , createAttribute   ,updateAttribute, deleteAttribute,getAttributesBySubCategory,
     addAttributeTranslation,updateAttributeTranslation, deleteAttributeTranslation , addAttributeOption , updateAttributeOption,
-deleteAttributeOption, getAttributeOptions , addOptionTranslation ,updateOptionTranslation ,deleteOptionTranslation,getallSubCategory ,getOneSubCategory
+deleteAttributeOption, getAttributeOptions , addOptionTranslation ,updateOptionTranslation ,deleteOptionTranslation,getallSubCategory ,getOneSubCategory,
+getAttributesGroupedBySubCategory
 }
