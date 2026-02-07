@@ -51,12 +51,38 @@ if (new Date() > start) {
     return res.status(400).json({mes:"This date is not available"})
    }
 
-    const newdata = await prisma.booking.create({data:{
-        propertyId:Propertiesid,
-        userId:req.user.id,
-        startDate:start,
-        endDate:end,
-    }})
+ const newdata = await prisma.booking.create({
+  data: {
+    propertyId: Propertiesid,
+    userId: req.user.id,
+    startDate: start,
+    endDate: end,
+  },
+  select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
+    }
+  }
+});
+
+
 
     res.status(200).json({mes:"create boking",data:newdata})
 
@@ -91,7 +117,29 @@ const Getbookingsbyproperty = async(req,res)=>{
         where:{
            propertyId: Propertiesid,
            status:{not:"canceled"}
-        }
+        },
+         select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
+    }
+  }
       })
 
       res.status(200).json({mes:"boiking", data:data})
@@ -115,7 +163,29 @@ const Getbookingsbyuser = async(req,res)=>{
             where:{
                 userId:userid,
                 status:{not:"canceled"}
-            }
+            },
+             select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
+    }
+  }
         }) 
         res.status(200).json({mes:"boiking", data:data})
 
@@ -158,7 +228,29 @@ const Updatebookingstatus = async(req,res)=>{
         },
         data:{
           status:status
-        }
+        },
+         select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
+    }
+  }
      })
 
      res.status(200).json({mes:"status updated",data:updatestatus})
@@ -242,7 +334,29 @@ if (start >= end) {
     data:{
          startDate:start,
          endDate:end,
+    },
+     select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
     }
+  }
    })
 
    res.status(200).json({mes:"date updated ", data:updatedate})
@@ -281,7 +395,30 @@ const Cancelbooking = async(req,res)=>{
      const cancelbooking = await prisma.booking.update({where:{id:bookingid},
     data:{
         status:"canceled"
-    }})
+    },
+     select: {
+    id: true,
+    startDate: true,
+    endDate: true,
+    status: true,
+
+    user: {
+      select: {
+        name: true,
+        email: true
+      }
+    },
+
+    property: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        location: true
+      }
+    }
+  }
+  })
 
     res.status(200).json({mes:"booking canceled", data:cancelbooking})
     }

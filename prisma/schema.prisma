@@ -22,7 +22,8 @@ model User {
 
   houses House[]
   rents  Properties_for_rent[]
-
+ bookings          Booking[]
+ 
   @@index([email])
 }
 
@@ -61,8 +62,10 @@ model Properties_for_rent {
   subCategoryId String
   subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
   display       Boolean @default(false)
+
   userId        String
   user          User @relation(fields: [userId], references: [id])
+
   dawarlyphone  String?
   price         Int
   location      String
@@ -70,12 +73,17 @@ model Properties_for_rent {
   pinding       Boolean @default(false)
   attributes    Json
   description   String?
+   bookings      Booking[]
 }
 
 model Booking {
   id         String   @id @default(uuid())
   propertyId String
+  property   Properties_for_rent @relation(fields: [propertyId], references: [id])
+
   userId     String
+  user       User @relation(fields: [userId], references: [id])
+
   startDate  DateTime
   endDate    DateTime
   status     String   @default("pending") // pending, confirmed, canceled
