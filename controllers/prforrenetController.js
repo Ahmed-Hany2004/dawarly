@@ -286,5 +286,37 @@ const listRentPropertiesBySubCategory = async (req, res) => {
   }
 };
 
+const getall = async(req,res)=>{
 
-module.exports= {createRentProperty,getRentPropertyById,updateRentProperty,deleteRentProperty,listRentPropertiesBySubCategory}
+  try{
+
+   const property = await prisma.properties_for_rent.findUnique({
+      select: {
+        id: true,
+        title: true,
+        subCategoryId: true,
+        display: true,
+        price: true,
+        location: true,
+        tags: true,
+        attributes: true,
+        description: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({"mes":"all data",data:property})
+  }
+  catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+}
+
+
+module.exports= {createRentProperty,getRentPropertyById,updateRentProperty,deleteRentProperty,listRentPropertiesBySubCategory,getall}

@@ -379,6 +379,39 @@ const createProperties_for_rent = async (req, res) => {
   }
 };
 
+
+const getall = async(req,res)=>{
+
+  try{
+
+   const property = await prisma.house.findUnique({
+      select: {
+        id: true,
+        title: true,
+        subCategoryId: true,
+        display: true,
+        price: true,
+        location: true,
+        tags: true,
+        attributes: true,
+        description: true,
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({"mes":"all data",data:property})
+  }
+  catch (err) {
+    console.log("=========>", err.message);
+    res.status(500).json({ mes: "Server error" });
+  }
+}
+
 module.exports = {
   createHouse,
   getHouseById,
@@ -387,5 +420,6 @@ module.exports = {
   listHousesBySubCategory,
   getpinding,
   updatepinding,
-  createProperties_for_rent
+  createProperties_for_rent,
+  getall
 }

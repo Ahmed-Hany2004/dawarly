@@ -3,7 +3,7 @@ const express = require("express")
 const router = express.Router()
 
 
-const {createHouse,getHouseById,updateHouse,deleteHouse,listHousesBySubCategory,
+const {createHouse,getHouseById,updateHouse,deleteHouse,listHousesBySubCategory,getall,
     updatepinding,getpinding,createProperties_for_rent} = require("../controllers/Productcontroller")
 
 const {veriy_Token} =require("../fun/verifyToken")
@@ -18,6 +18,9 @@ router.put("/house/:id",veriy_Token,updateHouse)
 router.delete("/house/:id",veriy_Token,deleteHouse)
 
 router.get("/subCategory/:id",listHousesBySubCategory)
+
+
+router.get("/",getall)
 
 
 
